@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="BioinformaticsLib:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BioinformaticsLib_jar</output-path>
+    <root id="archive" name="BioinformaticsLib.jar">
+      <element id="module-output" name="BioinformaticsLib" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../DHat/Libraries/Apache Commons/commons-io-2.6.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../DHat/Libraries/Apache Commons/commons-cli-1.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../DHat/Libraries/Apache Commons/commons-math3-3.6.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
