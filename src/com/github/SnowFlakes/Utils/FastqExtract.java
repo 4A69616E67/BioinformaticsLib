@@ -4,6 +4,8 @@ import com.github.SnowFlakes.File.CommonFile.CommonFile;
 import com.github.SnowFlakes.File.FastQFile.FastqFile;
 import com.github.SnowFlakes.File.FastQFile.FastqItem;
 import com.github.SnowFlakes.unit.Opts;
+import com.github.SnowFlakes.unit.Parameter;
+
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 
@@ -18,14 +20,16 @@ import java.util.HashSet;
 public class FastqExtract {
     public static void main(String[] args) throws IOException {
         Options Argument = new Options();
-        Argument.addOption(Option.builder("i").hasArg().argName("file").desc("input file").required().build());//输入文件
-        Argument.addOption(Option.builder("list").hasArg().argName("file").desc("read id file").build());//配置文件
-        Argument.addOption(Option.builder("n").hasArg().argName("int").desc("item number").build());//配置文件
-        Argument.addOption(Option.builder("t").hasArg().argName("int").desc("thread").build());//配置文件
-        Argument.addOption(Option.builder("f").hasArg().argName("file").desc("out file").build());//配置文件
-        final String helpFooter = "Note: use \"java -jar " + Opts.JarFile.getName() + " install\" when you first use!\n      JVM can get " + String.format("%.2f", Opts.MaxMemory / Math.pow(10, 9)) + "G memory";
+        Argument.addOption(Option.builder("i").hasArg().argName("file").desc("input file").required().build());// 输入文件
+        Argument.addOption(Option.builder("list").hasArg().argName("file").desc("read id file").build());// 配置文件
+        Argument.addOption(Option.builder("n").hasArg().argName("int").desc("item number").build());// 配置文件
+        Argument.addOption(Option.builder("t").hasArg().argName("int").desc("thread").build());// 配置文件
+        Argument.addOption(Option.builder("f").hasArg().argName("file").desc("out file").build());// 配置文件
+        final String helpFooter = "Note: use \"java -jar " + Opts.JarFile.getName()
+                + " install\" when you first use!\n      JVM can get "
+                + String.format("%.2f", Opts.MaxMemory / Math.pow(10, 9)) + "G memory";
         if (args.length == 0) {
-            //没有参数时打印帮助信息
+            // 没有参数时打印帮助信息
             new HelpFormatter().printHelp("java -jar Path/" + Opts.JarFile.getName(), "", Argument, helpFooter, true);
             System.exit(1);
         }
@@ -33,16 +37,18 @@ public class FastqExtract {
         try {
             ComLine = new DefaultParser().parse(Argument, args);
         } catch (ParseException e) {
-            //缺少参数时打印帮助信息
+            // 缺少参数时打印帮助信息
             System.err.println(e.getMessage());
             new HelpFormatter().printHelp("java -jar Path/" + Opts.JarFile.getName(), "", Argument, helpFooter, true);
             System.exit(1);
         }
-        FastqFile inputFile = new FastqFile(Opts.GetStringOpt(ComLine, "i", null));
-        FastqFile outputFile = ComLine.hasOption("f") ? new FastqFile(Opts.GetFileOpt(ComLine, "f", null)) : new FastqFile(inputFile.getPath() + ".out");
-        CommonFile listfile = ComLine.hasOption("list") ? new CommonFile(Opts.GetStringOpt(ComLine, "list", null)) : null;
-        int LineNum = Opts.GetIntOpt(ComLine, "n", 0);
-        int threads = Opts.GetIntOpt(ComLine, "t", 1);
+        FastqFile inputFile = new FastqFile(Parameter.GetStringOpt(ComLine, "i", null));
+        FastqFile outputFile = ComLine.hasOption("f") ? new FastqFile(Parameter.GetFileOpt(ComLine, "f", null))
+                : new FastqFile(inputFile.getPath() + ".out");
+        CommonFile listfile = ComLine.hasOption("list") ? new CommonFile(Parameter.GetStringOpt(ComLine, "list", null))
+                : null;
+        int LineNum = Parameter.GetIntOpt(ComLine, "n", 0);
+        int threads = Parameter.GetIntOpt(ComLine, "t", 1);
         FastqFile TempFile;
         HashSet<String> IDList = new HashSet<>();
         String[] line;

@@ -4,6 +4,8 @@ import com.github.SnowFlakes.File.AbstractFile;
 import com.github.SnowFlakes.File.SamFile.SamFile;
 import com.github.SnowFlakes.tool.Tools;
 import com.github.SnowFlakes.unit.Opts;
+import com.github.SnowFlakes.unit.Parameter;
+
 import org.apache.commons.cli.*;
 
 import java.io.*;
@@ -45,20 +47,25 @@ public class SamFilter {
     public SamFilter(String[] args) throws ParseException {
         Options Argument = new Options();
         Argument.addOption(Option.builder("i").hasArg().argName("file").desc("input sam file").required().build());
-        Argument.addOption(Option.builder("o").hasArg().argName("path").desc("output path (default " + OutPath + ")").build());
-        Argument.addOption(Option.builder("q").hasArg().argName("int").desc("minimum quality value (default " + MinQuality + ")").build());
-        Argument.addOption(Option.builder("p").hasArg().argName("string").desc("out prefix (default " + Prefix + ")").build());
-        Argument.addOption(Option.builder("t").hasArg().argName("int").desc("process threads (default " + Threads + ")").build());
+        Argument.addOption(
+                Option.builder("o").hasArg().argName("path").desc("output path (default " + OutPath + ")").build());
+        Argument.addOption(Option.builder("q").hasArg().argName("int")
+                .desc("minimum quality value (default " + MinQuality + ")").build());
+        Argument.addOption(
+                Option.builder("p").hasArg().argName("string").desc("out prefix (default " + Prefix + ")").build());
+        Argument.addOption(
+                Option.builder("t").hasArg().argName("int").desc("process threads (default " + Threads + ")").build());
         if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp " + Opts.JarFile.getName() + " " + SamFilter.class.getName(), Argument, true);
+            new HelpFormatter().printHelp("java -cp " + Opts.JarFile.getName() + " " + SamFilter.class.getName(),
+                    Argument, true);
             System.exit(1);
         }
         CommandLine ComLine = new DefaultParser().parse(Argument, args);
-        InputSamFile = new SamFile(Opts.GetStringOpt(ComLine, "i", null));
-        OutPath = Opts.GetFileOpt(ComLine, "o", OutPath);
-        Prefix = Opts.GetStringOpt(ComLine, "p", Prefix);
-        MinQuality = Opts.GetIntOpt(ComLine, "q", MinQuality);
-        Threads = Opts.GetIntOpt(ComLine, "t", Threads);
+        InputSamFile = new SamFile(Parameter.GetStringOpt(ComLine, "i", null));
+        OutPath = Parameter.GetFileOpt(ComLine, "o", OutPath);
+        Prefix = Parameter.GetStringOpt(ComLine, "p", Prefix);
+        MinQuality = Parameter.GetIntOpt(ComLine, "q", MinQuality);
+        Threads = Parameter.GetIntOpt(ComLine, "t", Threads);
         Init();
 
     }
@@ -82,8 +89,9 @@ public class SamFilter {
         MultiSamFile = new SamFile(OutPath + "/" + Prefix + ".multi.sam");
     }
 
-    public static void Execute(AbstractFile SamFile, AbstractFile UniqSamFile, AbstractFile UnMapSamFile, AbstractFile MultiSamFile, int MinQuality, int Threads) throws IOException {
-//        long[] Count = new long[]{0, 0, 0};//{uniq,numapped,multimapped}
+    public static void Execute(AbstractFile<?> SamFile, AbstractFile<?> UniqSamFile, AbstractFile<?> UnMapSamFile,
+            AbstractFile<?> MultiSamFile, int MinQuality, int Threads) throws IOException {
+        // long[] Count = new long[]{0, 0, 0};//{uniq,numapped,multimapped}
         BufferedReader sam_read = new BufferedReader(new FileReader(SamFile));
         BufferedWriter uniq_write = new BufferedWriter(new FileWriter(UniqSamFile));
         BufferedWriter unmap_write = new BufferedWriter(new FileWriter(UnMapSamFile));
@@ -103,19 +111,19 @@ public class SamFilter {
                         if (Integer.parseInt(str[4]) >= MinQuality) {
                             synchronized (uniq_write) {
                                 UniqSamFile.ItemNum++;
-//                                Count[0]++;
+                                // Count[0]++;
                                 uniq_write.write(line + "\n");
                             }
                         } else if (str[2].equals("*")) {
                             synchronized (unmap_write) {
                                 UnMapSamFile.ItemNum++;
-//                                Count[1]++;
+                                // Count[1]++;
                                 unmap_write.write(line + "\n");
                             }
                         } else {
                             synchronized (multi_write) {
                                 MultiSamFile.ItemNum++;
-//                                Count[2]++;
+                                // Count[2]++;
                                 multi_write.write(line + "\n");
                             }
                         }
@@ -132,7 +140,7 @@ public class SamFilter {
         unmap_write.close();
         multi_write.close();
         System.out.println(new Date() + "\tEnd to sam filter\t" + SamFile);
-//        return Count;
+        // return Count;
     }
 
     public void Run() throws IOException {

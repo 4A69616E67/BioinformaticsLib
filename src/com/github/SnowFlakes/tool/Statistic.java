@@ -1,14 +1,13 @@
 package com.github.SnowFlakes.tool;
 
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-
 import com.github.SnowFlakes.File.BedPeFile.BedpeFile;
 import com.github.SnowFlakes.unit.LinkerSequence;
 import org.apache.commons.math3.distribution.*;
+
 /**
  * Created by snowf on 2019/2/17.
  *
@@ -31,6 +30,7 @@ public class Statistic {
                 Distribution.set(len, Distribution.get(len) + 1);
             }
         }
+        reader.close();
         if (OutFile != null) {
             BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
             writer.write("Length\tCount\n");
@@ -46,7 +46,8 @@ public class Statistic {
         return dis;
     }
 
-    public static double[] CalculateLinkerCount(File InFile, LinkerSequence[] LinkerList, int MinScore, int Threads) throws IOException, InterruptedException {
+    public static double[] CalculateLinkerCount(File InFile, LinkerSequence[] LinkerList, int MinScore, int Threads)
+            throws IOException, InterruptedException {
         double[] Count = new double[LinkerList.length];
         BufferedReader reader = new BufferedReader(new FileReader(InFile));
         Thread[] t = new Thread[Threads];
@@ -76,6 +77,7 @@ public class Statistic {
             });
             t[i].start();
         }
+        reader.close();
         for (Thread aT : t) {
             aT.join();
         }
@@ -133,7 +135,8 @@ public class Statistic {
         return ChrSizeList;
     }
 
-    public static Hashtable<String, Integer> FindRestrictionSite(String FastFile, String Restriction, String Prefix) throws IOException {
+    public static Hashtable<String, Integer> FindRestrictionSite(String FastFile, String Restriction, String Prefix)
+            throws IOException {
         BufferedReader fastfile = new BufferedReader(new FileReader(FastFile));
         BufferedWriter chrwrite;
         Hashtable<String, Integer> ChrSize = new Hashtable<>();
@@ -143,7 +146,7 @@ public class Statistic {
         int Site = Restriction.indexOf("^");
         Restriction = Restriction.replace("^", "");
         int ResLength = Restriction.length();
-        //找到第一个以 ">" 开头的行
+        // 找到第一个以 ">" 开头的行
         while ((line = fastfile.readLine()) != null) {
             if (line.matches("^>.+")) {
                 Chr = line.split("\\s+")[0].replace(">", "");
@@ -171,7 +174,8 @@ public class Statistic {
                 Seq.append(line);
             }
         }
-        //========================================打印最后一条染色体=========================================
+        fastfile.close();
+        // ========================================打印最后一条染色体=========================================
         int Count = 0;
         int len = Seq.length();
         chrwrite = new BufferedWriter(new FileWriter(Prefix + "." + Chr + ".txt"));
@@ -191,7 +195,7 @@ public class Statistic {
 
     public static ArrayList<long[]> PowerLaw(BedpeFile BedpeFile, int StepLength, File OutFile) throws IOException {
         ArrayList<long[]> List = new ArrayList<>();
-        List.add(new long[]{0, StepLength, 0});
+        List.add(new long[] { 0, StepLength, 0 });
         BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
         String line;
         String[] str;
@@ -199,18 +203,20 @@ public class Statistic {
         byte[] index;
         switch (BedpeFile.BedpeDetect()) {
             case BedpePointFormat:
-                index = new byte[]{1, 1, 3, 3};
+                index = new byte[] { 1, 1, 3, 3 };
                 break;
             case BedpeRegionFormat:
-                index = new byte[]{5, 4, 2, 1};
+                index = new byte[] { 5, 4, 2, 1 };
                 break;
             default:
                 System.err.println("Error format!");
+                infile.close();
                 return List;
         }
         while ((line = infile.readLine()) != null) {
             str = line.split("\\s+");
-            distant = Math.abs(Integer.parseInt(str[index[0]]) + Integer.parseInt(str[index[1]]) - Integer.parseInt(str[index[2]]) - Integer.parseInt(str[index[3]])) / 2;
+            distant = Math.abs(Integer.parseInt(str[index[0]]) + Integer.parseInt(str[index[1]])
+                    - Integer.parseInt(str[index[2]]) - Integer.parseInt(str[index[3]])) / 2;
             int i = 0;
             while (i < List.size()) {
                 if (distant > List.get(i)[1]) {
@@ -221,14 +227,15 @@ public class Statistic {
                 }
             }
             if (i == List.size()) {
-                List.add(new long[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                List.add(new long[] { List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0 });
                 while (List.get(i)[1] < distant) {
                     i++;
-                    List.add(new long[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                    List.add(new long[] { List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0 });
                 }
                 List.get(i)[2]++;
             }
         }
+        infile.close();
         if (OutFile != null) {
             BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
             writer.write("Distant/(M)\tCount/(log10)\n");

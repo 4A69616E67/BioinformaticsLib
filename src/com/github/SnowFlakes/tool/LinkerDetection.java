@@ -22,48 +22,59 @@ public class LinkerDetection {
 
     public static void main(String[] args) throws IOException, ParseException {
 
-
-        //==============================================================================================================
+        // ==============================================================================================================
         Options Argument = new Options();
         Argument.addOption(Option.builder("i").hasArg().desc("input file").required().build());
         Argument.addOption(Option.builder("p").hasArg().desc("prefix").build());
         Argument.addOption(Option.builder("s").hasArg().desc("cutoff start index (default 0)").build());
-        Argument.addOption(Option.builder("t").hasArg().desc("cutoff terminal index (default 70, if you want to remain full reads, please set a large number)").build());
-        Argument.addOption(Option.builder("n").hasArg().desc("sequence number use to processing (default 5000)").build());
-        Argument.addOption(Option.builder("e").hasArg().desc("restriction enzyme seq (example A^AGCTT or T^TAA. if you needn't enzyme, set this option \"no\")").build());
+        Argument.addOption(Option.builder("t").hasArg()
+                .desc("cutoff terminal index (default 70, if you want to remain full reads, please set a large number)")
+                .build());
+        Argument.addOption(
+                Option.builder("n").hasArg().desc("sequence number use to processing (default 5000)").build());
+        Argument.addOption(Option.builder("e").hasArg().desc(
+                "restriction enzyme seq (example A^AGCTT or T^TAA. if you needn't enzyme, set this option \"no\")")
+                .build());
         Argument.addOption(Option.builder("k").hasArg().desc("k-mer length (default 10)").build());
         Argument.addOption(Option.builder("f").hasArg().desc("threshold (default 0.05)").build());
         if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp " + Opts.JarFile.getName() + " " + LinkerDetection.class.getName(), Argument, true);
+            new HelpFormatter().printHelp("java -cp " + Opts.JarFile.getName() + " " + LinkerDetection.class.getName(),
+                    Argument, true);
             System.exit(1);
         }
         CommandLine ComLine = new DefaultParser().parse(Argument, args);
-        FastqFile InPutFile = new FastqFile(Opts.GetFileOpt(ComLine, "i", null));
-        String Prefix = Opts.GetStringOpt(ComLine, "p", Configure.Prefix);
-        int Index1 = Opts.GetIntOpt(ComLine, "s", 0);
-        int Index2 = Opts.GetIntOpt(ComLine, "t", 70);
-        int SeqNum = Opts.GetIntOpt(ComLine, "n", 5000);
-        int KmerLen = Opts.GetIntOpt(ComLine, "k", 10);
-        float Threshold = Opts.GetFloatOpt(ComLine, "f", 0.05f);
-        RestrictionEnzyme enzyme = Opts.GetStringOpt(ComLine, "e", null) == null ? null : new RestrictionEnzyme(Opts.GetStringOpt(ComLine, "e", null));
-        //--------------------------------------------------------------------------------------------------------------
-        ArrayList<DNASequence> result = run(InPutFile, new File(Prefix), Index1, Index2, SeqNum, enzyme, KmerLen, Threshold);
+        FastqFile InPutFile = new FastqFile(Parameter.GetFileOpt(ComLine, "i", null));
+        String Prefix = Parameter.GetStringOpt(ComLine, "p", "out");
+        int Index1 = Parameter.GetIntOpt(ComLine, "s", 0);
+        int Index2 = Parameter.GetIntOpt(ComLine, "t", 70);
+        int SeqNum = Parameter.GetIntOpt(ComLine, "n", 5000);
+        int KmerLen = Parameter.GetIntOpt(ComLine, "k", 10);
+        float Threshold = Parameter.GetFloatOpt(ComLine, "f", 0.05f);
+        RestrictionEnzyme enzyme = Parameter.GetStringOpt(ComLine, "e", null) == null ? null
+                : new RestrictionEnzyme(Parameter.GetStringOpt(ComLine, "e", null));
+        // --------------------------------------------------------------------------------------------------------------
+        ArrayList<DNASequence> result = run(InPutFile, new File(Prefix), Index1, Index2, SeqNum, enzyme, KmerLen,
+                Threshold);
         for (DNASequence d : result) {
             System.out.println(d);
         }
     }
 
-    public static ArrayList<DNASequence> run(FastqFile InPutFile, File prefix, int start, int end, int seqNum, RestrictionEnzyme enzyme, int k_merLen, float threshold) throws IOException {
-        ArrayList<DNASequence> linkers = LinkerDetection.SimilarSeqDetection(InPutFile, new File("test"), start, end, seqNum, k_merLen, threshold);
+    public static ArrayList<DNASequence> run(FastqFile InPutFile, File prefix, int start, int end, int seqNum,
+            RestrictionEnzyme enzyme, int k_merLen, float threshold) throws IOException {
+        ArrayList<DNASequence> linkers = LinkerDetection.SimilarSeqDetection(InPutFile, new File("test"), start, end,
+                seqNum, k_merLen, threshold);
         if (enzyme == null) {
-            //find out restriction enzyme
+            // find out restriction enzyme
             int[] Count = new int[RestrictionEnzyme.list.length];
             for (int i = 0; i < linkers.size(); i++) {
                 int minPosition = 1000;
                 int minIndex = 0;
                 boolean flag = false;
                 for (int j = 0; j < RestrictionEnzyme.list.length; j++) {
-                    String subEnzyme1 = RestrictionEnzyme.list[j].getSequence().substring(0, Math.max(RestrictionEnzyme.list[j].getCutSite(), RestrictionEnzyme.list[j].getSequence().length() - RestrictionEnzyme.list[j].getCutSite()));
+                    String subEnzyme1 = RestrictionEnzyme.list[j].getSequence().substring(0, Math.max(
+                            RestrictionEnzyme.list[j].getCutSite(),
+                            RestrictionEnzyme.list[j].getSequence().length() - RestrictionEnzyme.list[j].getCutSite()));
                     int position = linkers.get(i).getSeq().indexOf(subEnzyme1);
                     if (position >= 0 && position <= 3 && position < minPosition) {
                         minPosition = position;
@@ -88,16 +99,21 @@ public class LinkerDetection {
         } else {
             System.out.println(enzyme);
         }
-        //修剪
+        // 修剪
         if (enzyme != null) {
             for (int i = 0; i < linkers.size(); i++) {
-                String subEnzyme1 = enzyme.getSequence().substring(0, Math.max(enzyme.getCutSite(), enzyme.getSequence().length() - enzyme.getCutSite()));
-                String subEnzyme2 = enzyme.getSequence().substring(Math.min(enzyme.getCutSite(), enzyme.getSequence().length() - enzyme.getCutSite()));
+                String subEnzyme1 = enzyme.getSequence().substring(0,
+                        Math.max(enzyme.getCutSite(), enzyme.getSequence().length() - enzyme.getCutSite()));
+                String subEnzyme2 = enzyme.getSequence()
+                        .substring(Math.min(enzyme.getCutSite(), enzyme.getSequence().length() - enzyme.getCutSite()));
                 int index1, index2;
                 index1 = linkers.get(i).getSeq().indexOf(subEnzyme1);
                 index2 = linkers.get(i).getSeq().lastIndexOf(subEnzyme2);
-                if (index1 >= 0 && index2 >= 0 && index1 + subEnzyme1.length() < index2 && index1 <= 3 && linkers.get(i).getSeq().length() - index2 - subEnzyme2.length() <= 3) {
-                    DNASequence s = new DNASequence(linkers.get(i).getSeq().substring(index1 + subEnzyme1.length(), index2), '+', linkers.get(i).Value);
+                if (index1 >= 0 && index2 >= 0 && index1 + subEnzyme1.length() < index2 && index1 <= 3
+                        && linkers.get(i).getSeq().length() - index2 - subEnzyme2.length() <= 3) {
+                    DNASequence s = new DNASequence(
+                            linkers.get(i).getSeq().substring(index1 + subEnzyme1.length(), index2), '+',
+                            linkers.get(i).Value);
                     if (s.get_reverse_complement().equals(s.getSeq())) {
                         linkers.set(i, s);
                     } else {
@@ -110,7 +126,7 @@ public class LinkerDetection {
                 }
             }
         }
-        //去重
+        // 去重
         Hashtable<String, Double> final_linkers = new Hashtable<>();
         for (DNASequence d : linkers) {
             if (!final_linkers.contains(d.getSeq())) {
@@ -126,8 +142,8 @@ public class LinkerDetection {
         return linkers;
     }
 
-
-    public static ArrayList<DNASequence> SimilarSeqDetection(FastqFile input_file, File prefix, int start, int end, int SeqNum, int k_merLen, float threshold) throws IOException {
+    public static ArrayList<DNASequence> SimilarSeqDetection(FastqFile input_file, File prefix, int start, int end,
+            int SeqNum, int k_merLen, float threshold) throws IOException {
         start = start < 0 ? 0 : start;
         end = end < start ? start : end;
         SeqNum = SeqNum == 0 ? 5000 : SeqNum;
@@ -160,7 +176,10 @@ public class LinkerDetection {
                     if (s.getSeq().length() == 0) {
                         result.add(new DNASequence(input.get(i).Seq.getSeq(), '+', input.get(i).Seq.Value));
                     } else {
-                        result.add(new DNASequence(input.get(i).Seq.getSeq() + s.getSeq().substring(input.get(i).Seq.getSeq().length() - 1), '+', Math.min(input.get(i).Seq.Value, s.Value)));
+                        result.add(new DNASequence(
+                                input.get(i).Seq.getSeq()
+                                        + s.getSeq().substring(input.get(i).Seq.getSeq().length() - 1),
+                                '+', Math.min(input.get(i).Seq.Value, s.Value)));
                     }
                 }
                 input.get(i).Visited = false;
@@ -175,7 +194,7 @@ public class LinkerDetection {
         ArrayList<String[]> subList = new ArrayList<>();
         for (int i = 0; i < temp_list.size(); i++) {
             String s = temp_list.get(i).Seq.getSeq();
-            subList.add(new String[]{s.substring(0, s.length() - 1), s.substring(1)});
+            subList.add(new String[] { s.substring(0, s.length() - 1), s.substring(1) });
         }
         for (int i = 0; i < temp_list.size(); i++) {
             String[] sub1 = subList.get(i);
@@ -205,7 +224,7 @@ public class LinkerDetection {
             String[] kmer = Tools.GetKmer(item.Sequence, k);
             for (String s : kmer) {
                 if (!KmerMap.containsKey(s)) {
-                    KmerMap.put(s, new int[]{0});
+                    KmerMap.put(s, new int[] { 0 });
                 }
                 KmerMap.get(s)[0]++;
             }

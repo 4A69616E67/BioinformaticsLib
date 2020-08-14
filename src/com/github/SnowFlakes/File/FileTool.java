@@ -4,7 +4,8 @@ import com.github.SnowFlakes.File.FastQFile.FastqFile;
 import com.github.SnowFlakes.File.FastQFile.FastqItem;
 import com.github.SnowFlakes.File.FastaFile.FastaFile;
 import com.github.SnowFlakes.File.FastaFile.FastaItem;
-import com.github.SnowFlakes.System.CommandLineDhat;
+import com.github.SnowFlakes.Software.MAFFT;
+import com.github.SnowFlakes.System.CommandLine;
 import com.github.SnowFlakes.unit.*;
 
 import java.io.*;
@@ -31,7 +32,7 @@ public class FileTool {
     public static Opts.FileFormat ReadsType(FastqFile fastqfile) throws IOException {
         int LineNumber = 100, i = 0, Count = 0;
         fastqfile.ReadOpen();
-//        BufferedReader reader = new BufferedReader(new FileReader(fastqfile));
+        // BufferedReader reader = new BufferedReader(new FileReader(fastqfile));
         FastqItem item;
         while ((item = fastqfile.ReadItem()) != null) {
             Count += item.Sequence.length();
@@ -99,12 +100,14 @@ public class FileTool {
         double[][] matrix = new double[List.size()][];
         for (int i = 0; i < List.size(); i++) {
             matrix[i] = new double[List.get(i).length];
-            if (List.get(i).length >= 0) System.arraycopy(List.get(i), 0, matrix[i], 0, List.get(i).length);
+            if (List.get(i).length >= 0)
+                System.arraycopy(List.get(i), 0, matrix[i], 0, List.get(i).length);
         }
         return matrix;
     }
 
-    public static String AdapterDetection(FastqFile file, File Prefix, int SubIndex, AbstractFile stat_file) throws IOException, InterruptedException {
+    public static String AdapterDetection(FastqFile file, File Prefix, int SubIndex, AbstractFile stat_file)
+            throws IOException, InterruptedException {
         StringBuilder Adapter = new StringBuilder();
         int SeqNum = 100;
         FastaFile HeadFile = new FastaFile(Prefix + ".head" + SeqNum);
@@ -118,7 +121,7 @@ public class FileTool {
         }
         file.ReadClose();
         writer.close();
-        FastaItem[] SplitAdapter = FindSimilarSequences(HeadFile, stat_file, 0.5f);
+        FastaItem[] SplitAdapter = new MAFFT("mafft").FindSimilarSequences(HeadFile, stat_file, 0.5f);
         int MaxValue = 0;
         for (FastaItem aSplitAdapter : SplitAdapter) {
             if (aSplitAdapter.Sequence.length() > MaxValue) {
@@ -128,76 +131,5 @@ public class FileTool {
         }
         return Adapter.toString();
     }
-
-    private static FastaItem[] FindSimilarSequences(FastaFile file, AbstractFile stat_file, float threshold) throws IOException, InterruptedException {
-        FastaFile MsaFile = new FastaFile(file.getPath() + ".msa");
-        StringBuilder SimSeq = new StringBuilder();
-        ArrayList<char[]> MsaStat = new ArrayList<>();
-        ArrayList<float[]> BaseFreq = new ArrayList<>();
-        int[] CountArrays = new int[255];
-        FastaItem[] ResItems;
-        //----------------------------------------------------------------------
-        String ComLine = Configure.Mafft.Exe() + " " + file.getPath();
-        Opts.CommandOutFile.Append(ComLine + "\n");
-        PrintWriter msa = new PrintWriter(MsaFile);
-        if (Configure.DeBugLevel < 1) {
-            CommandLineDhat.run(ComLine, msa, null);
-        } else {
-            CommandLineDhat.run(ComLine, msa, new PrintWriter(System.err));
-        }
-        msa.close();
-        MsaFile.ReadOpen();
-        FastaItem item;
-        while ((item = MsaFile.ReadItem()) != null) {
-            MsaStat.add(item.Sequence.toString().toCharArray());
-        }
-        int SeqNum = MsaStat.size();
-        MsaFile.ReadClose();
-        for (int i = 0; i < MsaStat.get(0).length; i++) {
-            CountArrays['A'] = 0;
-            CountArrays['T'] = 0;
-            CountArrays['C'] = 0;
-            CountArrays['G'] = 0;
-            CountArrays['-'] = 0;
-            for (char[] aMsaStat : MsaStat) {
-                CountArrays[Character.toUpperCase(aMsaStat[i])]++;
-            }
-            int MaxValue = 0;
-            char MaxBase = '-';
-            BaseFreq.add(new float[255]);
-            for (char base : new char[]{'A', 'T', 'C', 'G', '-'}) {
-                BaseFreq.get(i)[base] = (float) CountArrays[base] / SeqNum;
-                if (CountArrays[base] > MaxValue) {
-                    MaxValue = CountArrays[base];
-                    MaxBase = base;
-                }
-            }
-            if (MaxValue > SeqNum * threshold) {
-                SimSeq.append(MaxBase);
-            } else {
-                SimSeq.append('N');
-            }
-        }
-        String[] SplitSeq = SimSeq.toString().replace("-", "").split("N+");
-        ResItems = new FastaItem[SplitSeq.length];
-        for (int i = 0; i < ResItems.length; i++) {
-            ResItems[i] = new FastaItem(">seq" + i);
-            ResItems[i].Sequence.append(SplitSeq[i]);
-        }
-        if (stat_file != null) {
-            BufferedWriter writer = stat_file.WriteOpen();
-            writer.write("Position\tA\tT\tC\tG\t-\n");
-            for (int i = 0; i < BaseFreq.size(); i++) {
-                writer.write(String.valueOf(i + 1));
-                for (char base : new char[]{'A', 'T', 'C', 'G', '-'}) {
-                    writer.write("\t" + String.format("%.2f", BaseFreq.get(i)[base]));
-                }
-                writer.write("\n");
-            }
-            stat_file.WriteClose();
-        }
-        return ResItems;
-    }
-
 
 }

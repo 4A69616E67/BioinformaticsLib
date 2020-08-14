@@ -2,7 +2,6 @@ package com.github.SnowFlakes.File.BedFile;
 
 import com.github.SnowFlakes.File.AbstractFile;
 import com.github.SnowFlakes.File.CommonFile.CommonFile;
-import com.github.SnowFlakes.unit.Configure;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,13 +11,13 @@ import java.util.Comparator;
  * Created by snowf on 2019/2/17.
  */
 public class BedFile extends AbstractFile<BedItem> {
-//    public BedItem.Sort SortBy = BedItem.Sort.SeqTitle;
+    public short DeBugLevel = 0;
 
     public BedFile(String pathname) {
         super(pathname);
     }
 
-    private BedFile(AbstractFile file) {
+    private BedFile(AbstractFile<?> file) {
         super(file);
     }
 
@@ -27,7 +26,7 @@ public class BedFile extends AbstractFile<BedItem> {
         BedItem Item;
         if (s != null) {
             Item = new BedItem(s[0].split("\\s+"));
-//            Item.SortBy = SortBy;
+            // Item.SortBy = SortBy;
         } else {
             Item = null;
         }
@@ -46,11 +45,9 @@ public class BedFile extends AbstractFile<BedItem> {
                 new BedFile(TempSplitFile.get(i)).SortFile(TempSplitSortFile[i], comparator);
             }
             OutFile.MergeSortFile(TempSplitSortFile, comparator);
-            if (Configure.DeBugLevel < 1) {
-                for (int i = 0; i < TempSplitFile.size(); i++) {
-                    AbstractFile.delete(TempSplitFile.get(i));
-                    AbstractFile.delete(TempSplitSortFile[i]);
-                }
+            for (int i = 0; i < TempSplitFile.size(); i++) {
+                AbstractFile.delete(TempSplitFile.get(i));
+                AbstractFile.delete(TempSplitSortFile[i]);
             }
         } else {
             this.SortFile(OutFile, comparator);

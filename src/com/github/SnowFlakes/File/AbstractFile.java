@@ -45,7 +45,8 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
 
     public void ReadOpen() throws IOException {
         if (getName().matches(".*\\.gz")) {
-            reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(this))), BufferSize);
+            reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(this))),
+                    BufferSize);
         } else {
             reader = new BufferedReader(new FileReader(this), BufferSize);
         }
@@ -104,7 +105,7 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
     public synchronized String[] ReadItemLine() throws IOException {
         String line = reader.readLine();
         if (line != null) {
-            return new String[]{line};
+            return new String[] { line };
         }
         return null;
     }
@@ -174,7 +175,7 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
         for (int i = 0; i < SortList.size(); i++) {
             outfile.write(SortList.get(i).toString());
             outfile.write("\n");
-            SortList.set(i, null);//及时去除，减少内存占用
+            SortList.set(i, null);// 及时去除，减少内存占用
         }
         outfile.close();
         ReadClose();
@@ -190,7 +191,7 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
             System.out.print(s.getName() + " ");
         }
         System.out.print("to " + getName() + "\n");
-        //=========================================================================================
+        // =========================================================================================
         LinkedList<E> SortList = new LinkedList<>();
         BufferedWriter writer = WriteOpen();
         if (InFile.length == 0) {
@@ -235,7 +236,7 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
             }
         }
         WriteClose();
-        //============================================================================================
+        // ============================================================================================
         System.out.print(new Date() + "\tEnd merge ");
         for (File s : InFile) {
             System.out.print(s.getName() + " ");
@@ -262,7 +263,6 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
         WriteClose();
         System.out.println(new Date() + "\tDone merge");
     }
-
 
     public ArrayList<CommonFile> SplitFile(String Prefix, long itemNum) throws IOException {
         int filecount = 0;
@@ -291,7 +291,6 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
         return Outfile;
     }
 
-
     public boolean clean() {
         return clean(this);
     }
@@ -313,18 +312,19 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
         }
     }
 
-//    public SortItem<E> ReadSortItem() throws IOException {
-//        return ExtractSortItem(ReadItemLine());
-//    }
-//
-//    protected abstract SortItem<E> ExtractSortItem(String[] s);
+    // public SortItem<E> ReadSortItem() throws IOException {
+    // return ExtractSortItem(ReadItemLine());
+    // }
+    //
+    // protected abstract SortItem<E> ExtractSortItem(String[] s);
 
     public long getItemNum() {
         if (ItemNum <= 0) {
             try {
                 CalculateItemNumber();
             } catch (IOException e) {
-                System.err.println("Warning! can't get accurate item number, current item number: " + getName() + " " + ItemNum);
+                System.err.println(
+                        "Warning! can't get accurate item number, current item number: " + getName() + " " + ItemNum);
             }
         }
         return ItemNum;
@@ -338,5 +338,3 @@ public abstract class AbstractFile<E extends AbstractItem> extends File {
         BufferSize = bufferSize;
     }
 }
-
-

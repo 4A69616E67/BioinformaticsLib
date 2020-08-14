@@ -47,8 +47,8 @@ public class RestrictionEnzyme {
     }
 
     public static void main(String[] args) {
-        RestrictionEnzyme test1 = new RestrictionEnzyme("AA*GCTT");
-        RestrictionEnzyme test2 = new RestrictionEnzyme("AA__GCTT");
+        // RestrictionEnzyme test1 = new RestrictionEnzyme("AA*GCTT");
+        // RestrictionEnzyme test2 = new RestrictionEnzyme("AA__GCTT");
     }
 
     public RestrictionEnzyme(String s) {

@@ -2,11 +2,11 @@ package com.github.SnowFlakes.FragmentDigested;
 
 import com.github.SnowFlakes.tool.Tools;
 import com.github.SnowFlakes.unit.Chromosome;
-import com.github.SnowFlakes.unit.Configure;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
+
 /**
  * Created by snowf on 2019/2/17.
  *
@@ -17,9 +17,9 @@ public class FindRestrictionSite {
     private String Restriction;
     private String Prefix;
     private File ChrSizeFile;
-    private Chromosome[] Chromosomes;
+    // private Chromosome[] Chromosomes;
     private File[] ChrFragmentFile;
-    private int Threads = Configure.Thread;
+    // private int Threads = 1;
 
     public FindRestrictionSite(File FastFile, File OutPath, String Restriction, String Prefix) {
         this.FastFile = FastFile;
@@ -42,7 +42,7 @@ public class FindRestrictionSite {
         StringBuilder Seq = new StringBuilder();
         String line;
         String Chr = "";
-        //找到第一个以 ">" 开头的行
+        // 找到第一个以 ">" 开头的行
         while ((line = fastfile.readLine()) != null) {
             if (line.matches("^>.+")) {
                 Chr = line.split("\\s+")[0].replace(">", "");
@@ -71,7 +71,8 @@ public class FindRestrictionSite {
                 Seq.append(line);
             }
         }
-        //========================================打印最后一条染色体=========================================
+        fastfile.close();
+        // ========================================打印最后一条染色体=========================================
         int Count = 0;
         int len = Seq.length();
         ChrSize.add(new Chromosome(Chr, len));
@@ -89,20 +90,20 @@ public class FindRestrictionSite {
         chrwrite.close();
         Seq.setLength(0);
         ChrFragmentFile = OutFiles.toArray(new File[0]);
-        Tools.PrintList(list, ChrSizeFile);//打印染色体大小信息
+        Tools.PrintList(list, ChrSizeFile);// 打印染色体大小信息
         return ChrSize;
     }
 
     private ArrayList<int[]> CreateResSite(StringBuilder seq, String res) {
         int index = res.indexOf("^");
-        int[] item = new int[]{1, 0};
+        int[] item = new int[] { 1, 0 };
         String Res = res.replace("^", "");
         ArrayList<int[]> List = new ArrayList<>();
         List.add(item);
         for (int i = 0; i <= seq.length() - Res.length(); i++) {
             if (seq.substring(i, i + Res.length()).compareToIgnoreCase(Res) == 0) {
                 item[1] = i + index;
-                item = new int[]{i + index + 1, 0};
+                item = new int[] { i + index + 1, 0 };
                 List.add(item);
             }
         }

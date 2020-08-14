@@ -3,7 +3,7 @@ package com.github.SnowFlakes.unit;
 /**
  * Created by snowf on 2019/2/17.
  */
-public class IntegerArrays implements Comparable {
+public class IntegerArrays implements Comparable<Object> {
     private int[] item;
     private int length;
 

@@ -23,6 +23,7 @@ public class BedpeToInter {
             }
             outfile.write("\n");
         }
+        infile.close();
         outfile.close();
         System.out.println(new Date() + "\tBed to interaction end\t" + BedpeFile);
     }
